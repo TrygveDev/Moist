@@ -1,0 +1,83 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: Arial;
+  color: white;
+}
+
+.container {
+  width: 300px;
+  height: 400px;
+  background-color: #6bafc8;
+}
+
+/* GLOBALS */
+.drag {
+  -webkit-app-region: drag;
+}
+.nodrag {
+  -webkit-app-region: no-drag;
+}
+.noselect {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.selectable {
+  -webkit-user-select: all;
+  user-select: all;
+  cursor: pointer;
+}
+.clickable {
+  cursor: pointer;
+}
+
+/* HEADER */
+.header {
+  width: 100%;
+  height: 40px;
+  color: white;
+  font-family: "Roboto", sans-serif;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-icons,
+.header-navbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.icons-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 100%;
+}
+
+.icons-header:hover {
+  color: rgb(220, 220, 220);
+}
+
+/* Content */
+.content {
+  width: 300px;
+  height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.content_header {
+  text-shadow: 1.5px 1.5px rgba(0, 0, 0, 0.4);
+}
+
+/* Bottle */
+.content_bottle {
+  display: flex;
+  flex-direction: column-reverse;
+}
