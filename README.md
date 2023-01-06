@@ -9,7 +9,7 @@
   <h3 align="center">Moist</h3>
 
   <p align="center">
-    An unfinished side project for a workout app.
+    An unfinished side project for a drink reminder app.
     <br />
     <a href="https://github.com/TrygveDev/Moist"><strong>Explore the repository »</strong></a>
     <br />
