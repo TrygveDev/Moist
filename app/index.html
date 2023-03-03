@@ -16,8 +16,9 @@
         <div class="header drag">
             <h1></h1>
             <div class="header-icons nodrag">
-                <div class="icons-header clickable" id="settings">
-                    <i class="fa-solid fa-gear nodrag"></i>
+                <div class="icons-header clickable" id="gear">
+                    <i id="settingsmark" class="fa-solid fa-gear nodrag"></i>
+                    <i id="homemark" class="fa-solid fa-house nodrag hidden"></i>
                 </div>
                 <div class="icons-header clickable" id="xmark">
                     <i class="fa-solid fa-xmark nodrag"></i>
@@ -25,9 +26,75 @@
             </div>
         </div>
         <div class="content">
-            <h3 class="content_header">2.5L</h3>
-            <div class="content_bottle">
+            <div id="home" class="home">
+                <div class="intake">
+                    <h2>Moist 💦</h2>
+                    <div class="progress" id="progress">
+                        <div class="inner-circle">
+                            <p class="progress-percent" id="progress-percent">75%</p>
+                            <p class="progress-goal">of <span id="goalml">2500</span>ml</p>
+                            <p class="progress-current">-<span id="progressml">0</span>ml</p>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="register">
+                    <p>Click below to add your drink!</p>
+                    <div class="registerGrid">
+                        <div id="drop" class="register-item">
+                            <i class="fa-solid fa-droplet nodrag"></i>
+                            250ml
+                        </div>
+                        <div id="glass" class="register-item">
+                            <i class="fa-solid fa-glass-water nodrag"></i>
+                            500ml
+                        </div>
+                        <div id="bottle" class="register-item">
+                            <i class="fa-solid fa-bottle-water nodrag"></i>
+                            750ml
+                        </div>
+                        <div id="bucket" class="register-item">
+                            <i class="fa-solid fa-bucket nodrag"></i>
+                            1000ml
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div id="settings" class="settings hidden">
+                <div class="settingsHeader">
+                    <h2>Settings</h2>
+                    <p>Change the settings below to personalize your experience!</p>
+                </div>
+                <div class="settingsItem">
+                    <p>Your daily goal (ml)</p>
+                    <input type="number" maxlength="4" id="dailyGoalSetting" value="2500">
+                </div>
+                <div class="settingsItem">
+                    <p>Remind you to drink?</p>
+                    <label class="switch">
+                        <input id="remindToDrinkSetting" checked type="checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="settingsItem">
+                    <p>How often do you want to be reminded? (min)</p>
+                    <input id="remindedIntervalSetting" type="number" maxlength="4" value="90">
+                </div>
+                <div class="settingsItem">
+                    <p>Start minimized?</p>
+                    <label class="switch">
+                        <input id="startMinimizedSetting" type="checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="settingsItem">
+                    <p>Start when pc starts?</p>
+                    <label class="switch">
+                        <input id="startWhenPcStartsSetting" checked type="checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>

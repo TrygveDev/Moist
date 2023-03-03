@@ -2,8 +2,8 @@
 const log = require('electron-log');
 const { autoUpdater } = require("electron-updater");
 const { app, BrowserWindow, ipcMain, Menu, Tray, Notification } = require('electron')
-const path = require('path')
 const ipc = ipcMain
+const settings = require('electron-settings');
 
 var mainWindow;
 const createWindow = () => {
@@ -113,6 +113,7 @@ let tray;
 app.on('ready', function () {
     createDefaultWindow();
     autoUpdater.checkForUpdates();
+    checkIfSettingsExist()
 
     // UNCOMMENT IF NPM START IS USED
     win.close();
@@ -143,3 +144,30 @@ app.on('ready', function () {
     })
 
 });
+
+const checkIfSettingsExist = async () => {
+    const sett = await settings.get()
+    if (Object.keys(sett).length === 0) {
+        await settings.set('goal', 2500)
+        await settings.set('remindToDrink', true)
+        await settings.set('remindToDrinkInterval', 90)
+        await settings.set('startMinimized', false)
+        await settings.set('startOnStartup', true)
+        console.log("settings created!")
+        console.log(await settings.get())
+    } else {
+        console.log("settings exist!")
+        console.log(await settings.get())
+    }
+}
+
+ipcMain.on('saveSettings', async (event, arg) => {
+    console.log(arg)
+    await settings.set('goal', arg[0])
+    await settings.set('remindToDrink', arg[1])
+    await settings.set('remindToDrinkInterval', arg[2])
+    await settings.set('startMinimized', arg[3])
+    await settings.set('startOnStartup', arg[4])
+    console.log("settings updated!")
+    console.log(await settings.get())
+})

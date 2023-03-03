@@ -1,16 +1,32 @@
-const { ipcRenderer, app } = require('electron')
+const { ipcRenderer } = require('electron')
 const ipc = ipcRenderer
 const notifier = require('node-notifier');
-const path = require('path')
+
+
+// Settings
+function saveSettings() {
+    let dailyGoalSetting = document.getElementById('dailyGoalSetting').value
+    let remindToDrinkSetting = document.getElementById('remindToDrinkSetting').value
+    let remindedIntervalSetting = document.getElementById('remindedIntervalSetting').value
+    let startMinimizedSetting = document.getElementById('startMinimizedSetting').value
+    let startWhenPcStartsSetting = document.getElementById('startWhenPcStartsSetting').value
+
+    ipc.send('saveSettings', [dailyGoalSetting, remindToDrinkSetting, remindedIntervalSetting, startMinimizedSetting, startWhenPcStartsSetting])
+}
 
 // Menu Events
 document.getElementById('xmark').addEventListener('click', () => {
     ipc.send('hideMainWindow')
+    notify('Moist will continue to run in the background!', 'You can access it by clicking the tray icon.')
 })
 
-document.getElementById('settings').addEventListener('click', () => {
-
-})
+document.getElementById('gear').onclick = () => {
+    document.getElementById('settings').classList.toggle('hidden')
+    document.getElementById('home').classList.toggle('hidden')
+    document.getElementById('homemark').classList.toggle('hidden')
+    document.getElementById('settingsmark').classList.toggle('hidden')
+    saveSettings()
+}
 
 // Notification
 function notify(title, message) {
@@ -31,3 +47,52 @@ notifier.on('click', () => {
 });
 // notify('Moist', 'I will remind you when to drink!')
 
+// Update progress
+function updateProgress() {
+    let current = document.getElementById('progressml').textContent
+    let total = document.getElementById('goalml').textContent
+    let progressPercentage = (current / total) * 100;
+    if (progressPercentage > 9999) {
+        progressPercentage = 9999
+    }
+    document.getElementById('progress-percent').textContent = progressPercentage.toFixed(0) + '%'
+    document.getElementById('progress').style.setProperty("--percent", `${progressPercentage}%`);
+}
+updateProgress()
+
+// Add drink
+function addDrink(amount) {
+    let current = document.getElementById('progressml').textContent
+    let newProgress = parseInt(current) + amount
+    document.getElementById('progressml').textContent = newProgress
+    updateProgress()
+}
+
+document.getElementById('drop').onclick = () => {
+    addDrink(250)
+}
+document.getElementById('glass').onclick = () => {
+    addDrink(500)
+}
+document.getElementById('bottle').onclick = () => {
+    addDrink(750)
+}
+document.getElementById('bucket').onclick = () => {
+    addDrink(1000)
+}
+
+// Notifcation loop
+// Reset the notification timer if water has been changed
+
+const sentences = [
+    "It's time to take a drink!",
+    "Go get a glass of water!",
+    "Hey! Drink some water!",
+    "Drink now to reach your goal!",
+    "Drinking reminder! Get some water!"
+]
+setInterval(() => {
+    let current = document.getElementById('progressml').textContent
+    let total = document.getElementById('goalml').textContent
+    notify(`${sentences[Math.floor(Math.random() * sentences.length)]} ${current}ml/${total}ml`, `${current}ml/${total}ml`)
+}, 90 * 60 * 1000);
