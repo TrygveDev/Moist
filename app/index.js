@@ -2,14 +2,38 @@ const { ipcRenderer } = require('electron')
 const ipc = ipcRenderer
 const notifier = require('node-notifier');
 
+let dailyGoal;
+let remindToDrink;
+let remindedInterval;
+let startMinimized;
+let startWhenPcStarts;
+
+ipcRenderer.invoke('getSettings', "wow").then((result) => {
+    console.log(result)
+    dailyGoal = result.goal
+    remindToDrink = result.remindToDrink
+    remindedInterval = result.remindToDrinkInterval
+    startMinimized = result.startMinimized
+    startWhenPcStarts = result.startOnStartup
+
+    document.getElementById('dailyGoalSetting').value = dailyGoal
+    document.getElementById('remindToDrinkSetting').checked = remindToDrink
+    document.getElementById('remindedIntervalSetting').value = remindedInterval
+    document.getElementById('startMinimizedSetting').checked = startMinimized
+    document.getElementById('startWhenPcStartsSetting').checked = startWhenPcStarts
+    document.getElementById('goalml').textContent = dailyGoal
+    updateProgress()
+    console.log("settings loaded!")
+})
 
 // Settings
 function saveSettings() {
     let dailyGoalSetting = document.getElementById('dailyGoalSetting').value
-    let remindToDrinkSetting = document.getElementById('remindToDrinkSetting').value
+    let remindToDrinkSetting = document.getElementById('remindToDrinkSetting').checked
     let remindedIntervalSetting = document.getElementById('remindedIntervalSetting').value
-    let startMinimizedSetting = document.getElementById('startMinimizedSetting').value
-    let startWhenPcStartsSetting = document.getElementById('startWhenPcStartsSetting').value
+    let startMinimizedSetting = document.getElementById('startMinimizedSetting').checked
+    let startWhenPcStartsSetting = document.getElementById('startWhenPcStartsSetting').checked
+    document.getElementById('goalml').textContent = dailyGoalSetting
 
     ipc.send('saveSettings', [dailyGoalSetting, remindToDrinkSetting, remindedIntervalSetting, startMinimizedSetting, startWhenPcStartsSetting])
 }
