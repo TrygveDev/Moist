@@ -7,24 +7,49 @@ let remindToDrink;
 let remindedInterval;
 let startMinimized;
 let startWhenPcStarts;
+let interval;
 
-ipcRenderer.invoke('getSettings', "wow").then((result) => {
-    console.log(result)
-    dailyGoal = result.goal
-    remindToDrink = result.remindToDrink
-    remindedInterval = result.remindToDrinkInterval
-    startMinimized = result.startMinimized
-    startWhenPcStarts = result.startOnStartup
+function loadSettings() {
+    ipcRenderer.invoke('getSettings', "wow").then((result) => {
+        dailyGoal = result.goal
+        remindToDrink = result.remindToDrink
+        remindedInterval = result.remindToDrinkInterval
+        startMinimized = result.startMinimized
+        startWhenPcStarts = result.startOnStartup
 
-    document.getElementById('dailyGoalSetting').value = dailyGoal
-    document.getElementById('remindToDrinkSetting').checked = remindToDrink
-    document.getElementById('remindedIntervalSetting').value = remindedInterval
-    document.getElementById('startMinimizedSetting').checked = startMinimized
-    document.getElementById('startWhenPcStartsSetting').checked = startWhenPcStarts
-    document.getElementById('goalml').textContent = dailyGoal
-    updateProgress()
-    console.log("settings loaded!")
-})
+        document.getElementById('dailyGoalSetting').value = dailyGoal
+        document.getElementById('remindToDrinkSetting').checked = remindToDrink
+        document.getElementById('remindedIntervalSetting').value = remindedInterval
+        document.getElementById('startMinimizedSetting').checked = startMinimized
+        document.getElementById('startWhenPcStartsSetting').checked = startWhenPcStarts
+        document.getElementById('goalml').textContent = dailyGoal
+        updateProgress()
+
+        // Notifcation loop
+        // Reset the notification timer if water has been changed
+
+        const sentences = [
+            "It's time to take a drink!",
+            "Go get a glass of water!",
+            "Hey! Drink some water!",
+            "Drink now to reach your goal!",
+            "Drinking reminder! Get some water!"
+        ]
+
+        if (remindedInterval < 1) remindedInterval = 1;
+        interval = setInterval(() => {
+            let current = document.getElementById('progressml').textContent
+            let total = document.getElementById('goalml').textContent
+            if (current >= total) {
+                clearInterval(interval)
+                return
+            }
+            notify(`${sentences[Math.floor(Math.random() * sentences.length)]} ${current}ml/${total}ml`, `${current}ml/${total}ml`)
+        }, remindedInterval * 60 * 1000);
+
+    })
+}
+loadSettings()
 
 // Settings
 function saveSettings() {
@@ -36,6 +61,8 @@ function saveSettings() {
     document.getElementById('goalml').textContent = dailyGoalSetting
 
     ipc.send('saveSettings', [dailyGoalSetting, remindToDrinkSetting, remindedIntervalSetting, startMinimizedSetting, startWhenPcStartsSetting])
+    if (interval) clearInterval(interval)
+    loadSettings()
 }
 
 // Menu Events
@@ -85,6 +112,7 @@ function updateProgress() {
 updateProgress()
 
 // Add drink
+// TODO: remove drinks
 function addDrink(amount) {
     let current = document.getElementById('progressml').textContent
     let newProgress = parseInt(current) + amount
@@ -105,18 +133,3 @@ document.getElementById('bucket').onclick = () => {
     addDrink(1000)
 }
 
-// Notifcation loop
-// Reset the notification timer if water has been changed
-
-const sentences = [
-    "It's time to take a drink!",
-    "Go get a glass of water!",
-    "Hey! Drink some water!",
-    "Drink now to reach your goal!",
-    "Drinking reminder! Get some water!"
-]
-setInterval(() => {
-    let current = document.getElementById('progressml').textContent
-    let total = document.getElementById('goalml').textContent
-    notify(`${sentences[Math.floor(Math.random() * sentences.length)]} ${current}ml/${total}ml`, `${current}ml/${total}ml`)
-}, 90 * 60 * 1000);

@@ -6,7 +6,7 @@ const ipc = ipcMain
 const settings = require('electron-settings');
 
 var mainWindow;
-const createWindow = () => {
+const createWindow = async () => {
     mainWindow = new BrowserWindow({
         width: 300,
         height: 400,
@@ -34,6 +34,9 @@ const createWindow = () => {
     ipc.on('showMainWindow', (event) => {
         mainWindow.show();
     })
+    if (await settings.get('startMinimized')) {
+        mainWindow.hide();
+    }
 }
 
 // This method will be called when Electron has finished
@@ -61,7 +64,7 @@ function sendStatusToWindow(text) {
     log.info(text);
     win.webContents.send('message', text);
 }
-function createDefaultWindow() {
+async function createDefaultWindow() {
     win = new BrowserWindow({
         width: 300,
         height: 250,
@@ -81,11 +84,13 @@ function createDefaultWindow() {
             contextIsolation: false
         }
     });
-    win.webContents.openDevTools();
     win.on('closed', () => {
         win = null;
     });
     win.loadURL(`file://${__dirname}/updater.html#v${app.getVersion()}`);
+    if (await settings.get('startMinimized')) {
+        win.hide();
+    }
     return win;
 }
 autoUpdater.on('checking-for-update', () => {
@@ -110,7 +115,8 @@ autoUpdater.on('update-downloaded', (info) => {
     autoUpdater.quitAndInstall(false, true);
 });
 let tray;
-app.on('ready', function () {
+
+app.on('ready', () => {
     createDefaultWindow();
     autoUpdater.checkForUpdates();
     createSettings()
@@ -142,8 +148,18 @@ app.on('ready', function () {
             mainWindow.show();
         }
     })
-
 });
+
+const startUpSettings = async () => {
+    await settings.get('startOnStartup').then((result) => {
+        app.setLoginItemSettings({
+            openAtLogin: result.startOnStartup,
+        })
+    })
+}
+startUpSettings()
+
+
 
 const createSettings = async () => {
     const sett = await settings.get()
@@ -162,9 +178,7 @@ ipcMain.on('saveSettings', async (event, arg) => {
     await settings.set('remindToDrinkInterval', arg[2])
     await settings.set('startMinimized', arg[3])
     await settings.set('startOnStartup', arg[4])
-
-    console.log('Settings saved!')
-    console.log(await settings.get())
+    startUpSettings()
 })
 
 ipcMain.handle('getSettings', async (event, arg) => {
