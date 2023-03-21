@@ -1,55 +1,53 @@
 const { ipcRenderer } = require('electron')
-const ipc = ipcRenderer
-const notifier = require('node-notifier');
+import { notify } from "./functions/notifier.js";
+import { startReminder } from "./functions/reminder.js";
+
+// notify('Moist', 'I will remind you when to drink!')
 
 let dailyGoal;
 let remindToDrink;
 let remindedInterval;
 let startMinimized;
 let startWhenPcStarts;
+let drinked;
 let interval;
 
 function loadSettings() {
     ipcRenderer.invoke('getSettings', "wow").then((result) => {
+        if (remindedInterval != result.remindToDrinkInterval) startReminder(result.remindToDrinkInterval) // If interval changed, restart reminder
+
         dailyGoal = result.goal
         remindToDrink = result.remindToDrink
         remindedInterval = result.remindToDrinkInterval
         startMinimized = result.startMinimized
         startWhenPcStarts = result.startOnStartup
 
+        if (result.lastDrinked === new Date().toLocaleDateString().toString()) {
+            drinked = result.drinked
+            console.log(result.drinked)
+        } else {
+            ipcRenderer.send('resetDrinked')
+            drinked = 0
+        }
+
+
+        console.log(result.goal)
+        console.log(dailyGoal)
         document.getElementById('dailyGoalSetting').value = dailyGoal
         document.getElementById('remindToDrinkSetting').checked = remindToDrink
         document.getElementById('remindedIntervalSetting').value = remindedInterval
         document.getElementById('startMinimizedSetting').checked = startMinimized
         document.getElementById('startWhenPcStartsSetting').checked = startWhenPcStarts
         document.getElementById('goalml').textContent = dailyGoal
+        document.getElementById('progressml').textContent = drinked
+
+        console.log("Loaded!")
         updateProgress()
-
-        // Notifcation loop
-        // Reset the notification timer if water has been changed
-
-        const sentences = [
-            "It's time to take a drink!",
-            "Go get a glass of water!",
-            "Hey! Drink some water!",
-            "Drink now to reach your goal!",
-            "Drinking reminder! Get some water!"
-        ]
-
-        if (remindedInterval < 1) remindedInterval = 1;
-        interval = setInterval(() => {
-            let current = document.getElementById('progressml').textContent
-            let total = document.getElementById('goalml').textContent
-            if (current >= total) {
-                clearInterval(interval)
-                return
-            }
-            notify(`${sentences[Math.floor(Math.random() * sentences.length)]} ${current}ml/${total}ml`, `${current}ml/${total}ml`)
-        }, remindedInterval * 60 * 1000);
-
     })
 }
 loadSettings()
+
+
 
 // Settings
 function saveSettings() {
@@ -58,19 +56,24 @@ function saveSettings() {
     let remindedIntervalSetting = document.getElementById('remindedIntervalSetting').value
     let startMinimizedSetting = document.getElementById('startMinimizedSetting').checked
     let startWhenPcStartsSetting = document.getElementById('startWhenPcStartsSetting').checked
-    document.getElementById('goalml').textContent = dailyGoalSetting
 
-    ipc.send('saveSettings', [dailyGoalSetting, remindToDrinkSetting, remindedIntervalSetting, startMinimizedSetting, startWhenPcStartsSetting])
+    dailyGoal = dailyGoalSetting
+    remindToDrink = remindToDrinkSetting
+    remindedInterval = remindedIntervalSetting
+    startMinimized = startMinimizedSetting
+    startWhenPcStarts = startWhenPcStartsSetting
+
+    ipcRenderer.send('saveSettings', [dailyGoalSetting, remindToDrinkSetting, remindedIntervalSetting, startMinimizedSetting, startWhenPcStartsSetting])
     if (interval) clearInterval(interval)
     loadSettings()
 }
 
 // Menu Events
+// Close Button
 document.getElementById('xmark').addEventListener('click', () => {
-    ipc.send('hideMainWindow')
+    ipcRenderer.send('hideMainWindow')
     notify('Moist will continue to run in the background!', 'You can access it by clicking the tray icon.')
 })
-
 document.getElementById('gear').onclick = () => {
     document.getElementById('settings').classList.toggle('hidden')
     document.getElementById('home').classList.toggle('hidden')
@@ -79,24 +82,6 @@ document.getElementById('gear').onclick = () => {
     saveSettings()
 }
 
-// Notification
-function notify(title, message) {
-    notifier.notify(
-        {
-            title: title,
-            message: message,
-            icon: __dirname + `/app/images/icon.png`, // Absolute path (doesn't work on balloons)
-            appID: 'Moist',
-            sound: true, // Only Notification Center or Windows Toasters
-            wait: false // Wait with callback, until user action is taken against notification, does not apply to Windows Toasters as they always wait or notify-send as it does not support the wait option
-        },
-        (err) => { if (err) console.log(err) }
-    );
-}
-notifier.on('click', () => {
-    ipc.send('showMainWindow')
-});
-// notify('Moist', 'I will remind you when to drink!')
 
 // Update progress
 function updateProgress() {
@@ -117,9 +102,17 @@ function addDrink(amount) {
     let current = document.getElementById('progressml').textContent
     let newProgress = parseInt(current) + amount
     document.getElementById('progressml').textContent = newProgress
+    ipcRenderer.send('setLastDrinked', new Date().toLocaleDateString().toString())
+    ipcRenderer.send('drinked', amount)
     updateProgress()
 }
-
+function removeDrink(amount) {
+    let current = document.getElementById('progressml').textContent
+    let newProgress = parseInt(current) - amount
+    document.getElementById('progressml').textContent = newProgress
+    ipcRenderer.send('removeDrinked', amount)
+    updateProgress()
+}
 document.getElementById('drop').onclick = () => {
     addDrink(250)
 }
@@ -129,7 +122,8 @@ document.getElementById('glass').onclick = () => {
 document.getElementById('bottle').onclick = () => {
     addDrink(750)
 }
-document.getElementById('bucket').onclick = () => {
-    addDrink(1000)
+document.getElementById('minus').onclick = () => {
+    if (document.getElementById('progressml').textContent <= 0) return
+    removeDrink(250)
 }
 

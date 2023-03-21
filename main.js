@@ -5,6 +5,20 @@ const { app, BrowserWindow, ipcMain, Menu, Tray, Notification } = require('elect
 const ipc = ipcMain
 const settings = require('electron-settings');
 
+const createSettings = async () => {
+    const sett = await settings.get()
+    if (Object.keys(sett).length === 0) {
+        await settings.set('goal', 2500)
+        await settings.set('remindToDrink', true)
+        await settings.set('remindToDrinkInterval', 90)
+        await settings.set('startMinimized', false)
+        await settings.set('startOnStartup', true)
+        await settings.set('drinked', 0)
+        await settings.set('lastDrinked', new Date().toLocaleDateString().toString())
+    }
+}
+createSettings()
+
 var mainWindow;
 const createWindow = async () => {
     mainWindow = new BrowserWindow({
@@ -119,7 +133,7 @@ let tray;
 app.on('ready', () => {
     createDefaultWindow();
     autoUpdater.checkForUpdates();
-    createSettings()
+
 
     // UNCOMMENT IF NPM START IS USED
     win.close();
@@ -152,25 +166,23 @@ app.on('ready', () => {
 
 const startUpSettings = async () => {
     await settings.get('startOnStartup').then((result) => {
-        app.setLoginItemSettings({
-            openAtLogin: result.startOnStartup,
-        })
+        if (result === undefined) {
+            app.setLoginItemSettings({
+                openAtLogin: true,
+            })
+        } else {
+            app.setLoginItemSettings({
+                openAtLogin: result.startOnStartup,
+            })
+        }
+
     })
 }
 startUpSettings()
 
 
 
-const createSettings = async () => {
-    const sett = await settings.get()
-    if (Object.keys(sett).length === 0) {
-        await settings.set('goal', 2500)
-        await settings.set('remindToDrink', true)
-        await settings.set('remindToDrinkInterval', 90)
-        await settings.set('startMinimized', false)
-        await settings.set('startOnStartup', true)
-    }
-}
+
 
 ipcMain.on('saveSettings', async (event, arg) => {
     await settings.set('goal', arg[0])
@@ -185,3 +197,32 @@ ipcMain.handle('getSettings', async (event, arg) => {
     const sett = await settings.get()
     return sett
 })
+
+ipcMain.handle('getLastDrinked', async (event, arg) => {
+    let lastDrinked = await settings.get('lastDrinked')
+    if (lastDrinked === undefined) {
+        await settings.set('lastDrinked', 0)
+        return await settings.get('lastDrinked')
+    }
+    return lastDrinked
+})
+ipcMain.on('setLastDrinked', async (event, arg) => {
+    await settings.set('lastDrinked', arg)
+    console.log("Last drinked", await settings.get('lastDrinked'))
+})
+ipcMain.on('drinked', async (event, arg) => {
+    const previous = await settings.get('drinked')
+    await settings.set('drinked', previous + arg)
+    console.log("Drinked", await settings.get('drinked'))
+})
+ipcMain.on('resetDrinked', async (event, arg) => {
+    await settings.set('drinked', 0)
+    console.log("Drinked reset", await settings.get('drinked'))
+})
+ipcMain.on('removeDrinked', async (event, arg) => {
+    const previous = await settings.get('drinked')
+    await settings.set('drinked', previous - arg)
+    console.log("Drinked removed", await settings.get('drinked'))
+})
+
+console.log(settings.file())

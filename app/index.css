@@ -34,6 +34,9 @@
 .hidden {
 	display: none !important;
 }
+.red {
+	background-color: rgba(128, 0, 0, 0.75) !important;
+}
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
