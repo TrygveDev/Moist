@@ -49,8 +49,7 @@ Moist is a taskbar application for windows that reminds you when you need to dri
 * [Firebase](https://firebase.google.com/)
 
 ## Installation
-
-   Installation is not currently avaiable as this project has been abandoned for the time beeing.
+Go to [releases](https://github.com/TrygveDev/Moist/releases) and download the Moist-(version).exe file.
 
 <!-- CONTRIBUTING -->
 ## Contributing
